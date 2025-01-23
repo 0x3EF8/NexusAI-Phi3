@@ -2,7 +2,7 @@ import os
 import io
 import sys
 import requests
-from tqdm import tqdm
+from tqdm import tqdm 
 from llama_cpp import Llama
 
 # Configuration Constants (Easily Adjustable)
@@ -24,30 +24,32 @@ class NexusAI:
     def _ensure_model_exists(model_directory: str, model_filename: str):
         model_path = os.path.join(model_directory, model_filename)
         if os.path.exists(model_path):
+            print(f"[NexusAI] Model '{model_filename}' already exists. Skipping download.")
             return
 
+        print(f"[NexusAI] Model '{model_filename}' not found. Downloading from {MODEL_URL}...")
         os.makedirs(model_directory, exist_ok=True)
+
         try:
-            response = requests.get(MODEL_URL, stream=True)
-            response.raise_for_status()
-
-            total_size = int(response.headers.get('content-length', 0))
-            with open(model_path, "wb") as model_file:
-                with tqdm(total=total_size, unit="B", unit_scale=True, desc=MODEL_FILENAME) as bar:
+            with requests.get(MODEL_URL, stream=True) as response:
+                response.raise_for_status()
+                total_size = int(response.headers.get("content-length", 0))
+                with open(model_path, "wb") as model_file, tqdm(
+                    total=total_size, unit="B", unit_scale=True, desc="Downloading Model"
+                ) as progress_bar:
                     for chunk in response.iter_content(chunk_size=8192):
-                        if chunk:
-                            model_file.write(chunk)
-                            bar.update(len(chunk))
-
-            print(f"[NexusAI] Model downloaded successfully: {model_path}")
+                        model_file.write(chunk)
+                        progress_bar.update(len(chunk))
+            print(f"[NexusAI] Model downloaded and saved to '{model_path}'.")
         except requests.RequestException as e:
-            raise Exception(f"Failed to download the model: {e}")
+            raise Exception(f"[NexusAI] Failed to download the model: {e}")
 
     @staticmethod
     def _load_model(model_directory: str, model_filename: str) -> Llama:
         model_path = os.path.join(model_directory, model_filename)
         if not os.path.exists(model_path):
-            raise FileNotFoundError(f"Model file '{model_filename}' not found.")
+            raise FileNotFoundError(f"[NexusAI] Model file '{model_filename}' not found.")
+        print(f"[NexusAI] Loading model from '{model_path}'...")
         return Llama(
             model_path=model_path,
             n_ctx=MAX_SEQUENCE_LENGTH,
@@ -69,7 +71,7 @@ class NexusAI:
             return response['choices'][0]['text'].strip()
 
         except Exception as e:
-            return f"Error: Unable to generate response. Details: {e}"
+            return f"[NexusAI] Error: Unable to generate response. Details: {e}"
 
         finally:
             sys.stderr = sys.__stderr__
