@@ -2,6 +2,7 @@ import os
 import io
 import sys
 import requests
+from tqdm import tqdm  
 from llama_cpp import Llama
 
 # Configuration Constants (Easily Adjustable)
@@ -27,13 +28,19 @@ class NexusAI:
 
         os.makedirs(model_directory, exist_ok=True)
         try:
+            
+            print("[NexusAI] Model not found. Downloading...\n")
             response = requests.get(MODEL_URL, stream=True)
             response.raise_for_status()
 
+            total_size = int(response.headers.get('content-length', 0))  
             with open(model_path, "wb") as model_file:
-                for chunk in response.iter_content(chunk_size=8192):
-                    model_file.write(chunk)
+                with tqdm(total=total_size, unit="B", unit_scale=True, desc=MODEL_FILENAME) as bar:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        model_file.write(chunk)
+                        bar.update(len(chunk)) 
 
+            print(f"[NexusAI] Model downloaded successfully: {model_path}")
         except requests.RequestException as e:
             raise Exception(f"Failed to download the model: {e}")
 
