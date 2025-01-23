@@ -82,7 +82,7 @@ These values are set to reasonable defaults, but feel free to change them if nee
 Once everything is set up, you can start the AI assistant with:
 
 ```bash
-python nexusai.py
+python Nexus.py
 ```
 
 The assistant will prompt you for input, and you can start asking questions right away.
