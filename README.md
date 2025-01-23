@@ -100,8 +100,8 @@ The assistant will prompt you for input, and you can start asking questions righ
 ```bash
 [NexusAI] Welcome to NexusAI! Type 'exit' to quit.
 
-You: What is the capital of France?
-NexusAI: The capital of France is Paris.
+You: What is the capital of Southern Leyte?
+NexusAI: The capital of Southern Leyte is Maasin City.
 ```
 
 ---
