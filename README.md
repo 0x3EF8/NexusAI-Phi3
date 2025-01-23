@@ -41,9 +41,10 @@ Next, install the necessary libraries using `pip`. It’s recommended to use a v
 #### Using a Virtual Environment (Optional):
 
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Linux/macOS
-venv\Scriptsctivate     # On Windows
+python -m venv venv # On Linux/macOS
+source venv/bin/activate # On Windows
+venv\Scripts\activate
+
 ```
 
 #### Install dependencies:
