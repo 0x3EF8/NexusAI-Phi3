@@ -138,8 +138,8 @@ class NexusAI:
     def show_help(self):
         """Displays a detailed help message with instructions for available commands."""
         return (
-            "\n[NexusAI Help Center]\n"
-            "Welcome to NexusAI, your advanced programming assistant. Below is the list of commands you can use:\n"
+            "\n[NexusAI Help Center]\n\n"
+            "Below is the list of commands you can use:\n\n"
             "  - 'exit'     : Safely terminates the program and exits.\n"
             "  - 'reset'    : Clears all conversation history and resets the AI's context.\n"
             "  - 'clear'    : Clears the screen for a cleaner workspace.\n"
