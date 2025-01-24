@@ -45,7 +45,8 @@ class NexusAI:
         if os.path.exists(model_path):
             return
 
-        print(f"[NexusAI] The model '{model_filename}' is missing. Initiating download...")
+        print(f"[NexusAI] Model '{model_filename}' not found in the local repository.")
+        print(f"[NexusAI] Downloading the required model from the server...")
         os.makedirs(model_directory, exist_ok=True)
 
         try:
