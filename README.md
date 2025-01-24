@@ -140,7 +140,7 @@ NexusAI includes several commands to enhance usability:
 ## Troubleshooting  
 
 - **Model Download Fails**: Ensure your internet connection is active. If the download fails, manually download the model and place it in the \`model/\` directory.  
-- **Dependency Errors**: Ensure youâ€™re using Python 3.9 or higher and that \`pip\` is up to date. Run \`pip install --upgrade pip\` if necessary.  
+- **Dependency Errors**: Ensure you’re using Python 3.9 or higher and that \`pip\` is up to date. Run \`pip install --upgrade pip\` if necessary.  
 - **Performance Issues**: Adjust \`NUM_THREADS\`, \`GPU_LAYERS\`, or \`MAX_TOKENS\` in the configuration for optimized performance.  
 
 ---
