@@ -1,13 +1,10 @@
-# -*- mode: python ; coding: utf-8 -*-
 import os
 from PyInstaller.utils.hooks import get_package_paths
 
 block_cipher = None
 
-# Get the path to the llama_cpp package
 _, llama_cpp_pkg_path = get_package_paths('llama_cpp')
 
-# Locate the llama.dll file
 llama_dll_path = os.path.join(llama_cpp_pkg_path, 'lib', 'llama.dll')
 
 a = Analysis(
