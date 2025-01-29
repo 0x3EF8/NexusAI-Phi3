@@ -9,7 +9,7 @@ NexusAI-Phi3 is a simple yet highly functional offline AI assistant powered by t
 ## Features  
 
 - **Offline Functionality**: Operates entirely offline after downloading the model.  
-- **Efficient Performance**: Lightweight and optimized for smooth operation across various systems.  
+- **Efficient Performance**: Lightweight and optimized for smooth operation across various systemNs.  
 - **Customizable Settings**: Offers a range of configurable options to tailor the assistant to your needs.  
 - **Command Support**: Built-in commands for enhanced control and interaction.  
 - **Expandable**: Can be adapted and extended for various use cases.  
@@ -109,7 +109,7 @@ ENABLE_MONITORING = True  # Enable detailed response time and request tracking
 To start NexusAI, run the following command:  
 
 ```bash  
-python Nexus.py  
+python main.py  
 ```  
 
 ### Example Interaction  
