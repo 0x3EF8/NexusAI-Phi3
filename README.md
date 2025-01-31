@@ -34,7 +34,7 @@ Start by cloning this repository to your local machine:
 
 ```bash  
 git clone https://github.com/0x3EF8/NexusAI.git  
-cd NexusAI  
+cd NexusAI/src
 ```  
 
 ### 2. Install Dependencies  
