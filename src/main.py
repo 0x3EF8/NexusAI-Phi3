@@ -11,43 +11,54 @@ import pyperclip
 import re
 
 # Configuration Constants
-MODEL_FILENAME = "Phi-3-mini-4k-instruct-q4.gguf"  # The AI model used for response generation
-MODEL_DIRECTORY = "model"  # Directory where the model is stored
-MAX_SEQUENCE_LENGTH = 4096  # Maximum context length for the AI
-NUM_THREADS = 8  # Number of CPU threads allocated
-GPU_LAYERS = 35  # Number of layers offloaded to the GPU for processing
-MAX_TOKENS = 2048  # Maximum tokens for each AI response
-MODEL_URL = "https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf"  # Download URL for the model
+MODELS = {
+    "phi3": {
+        "name": "Phi-3-mini-4k-instruct-q4.gguf",
+        "url": "https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf"
+    },
+    "deepseek": {
+        "name": "DeepSeek-R1-Distill-Qwen-1.5B-Q6_K.gguf",
+        "url": "https://huggingface.co/bartowski/DeepSeek-R1-Distill-Qwen-1.5B-GGUF/resolve/main/DeepSeek-R1-Distill-Qwen-1.5B-Q6_K.gguf"
+    }
+}
+MODEL_DIRECTORY = "models"
+MAX_SEQUENCE_LENGTH = 4096
+NUM_THREADS = 8
+GPU_LAYERS = 35
+MAX_TOKENS = 2048
 
-# Custom prompt for AI initialization
-CUSTOM_PROMPT = "From now on, your name is NexusAI, developed by 0x3ef8. Act as a highly professional assistant with expertise in advanced programming concepts, tools, and best practices. Provide detailed, efficient, and professional responses."
 
-# Limit for conversation history
-MAX_HISTORY_SIZE = 10  # Maximum number of recent interactions stored in memory
+# Custom prompt for AI initialization (can be disabled by setting to False)
+# CUSTOM_PROMPT = "From now on, your name is NexusAI, developed by 0x3ef8. Act as a highly professional assistant with expertise in advanced programming concepts, tools, and best practices. Provide detailed, efficient, and professional responses."
+CUSTOM_PROMPT = False
+# Limit for conversation history (can be disabled by setting to False)
+MAX_HISTORY_SIZE = False
 
 # Monitoring and analytics
 ENABLE_MONITORING = True  # Enable detailed response time and request tracking
 
 class NexusAI:
-    def __init__(self, model_directory: str, model_filename: str):
+    def __init__(self, model_directory: str):
         self.history = []
         self.num_requests = 0
         self.total_tokens = 0
-        self._ensure_model_exists(model_directory, model_filename)
-        self.model = self._load_model(model_directory, model_filename)
+        self.model_directory = model_directory
+        self.current_model = None
+        self.model = None
 
         if CUSTOM_PROMPT:
             self.history.append(f"<|assistant|>\n{CUSTOM_PROMPT}\n")
 
-    def _ensure_model_exists(self, model_directory: str, model_filename: str):
+    def _ensure_model_exists(self, model_key: str):
         """Checks if the model exists locally; otherwise, downloads it."""
-        model_path = os.path.join(model_directory, model_filename)
+        model_info = MODELS[model_key]
+        model_path = os.path.join(self.model_directory, model_info["name"])
         if os.path.exists(model_path):
             return
 
-        print(f"[NexusAI] Model '{model_filename}' not found in the local repository.")
+        print(f"[NexusAI] Model '{model_info['name']}' not found in the local repository.")
         print(f"[NexusAI] Downloading the required model from the server...")
-        os.makedirs(model_directory, exist_ok=True)
+        os.makedirs(self.model_directory, exist_ok=True)
 
         try:
             headers = {}
@@ -56,7 +67,7 @@ class NexusAI:
                 current_size = os.path.getsize(model_path)
                 headers['Range'] = f"bytes={current_size}-"
 
-            with requests.get(MODEL_URL, stream=True, headers=headers) as response:
+            with requests.get(model_info["url"], stream=True, headers=headers) as response:
                 response.raise_for_status()
                 total_size = int(response.headers.get("content-length", 0)) + current_size
                 with open(model_path, "ab") as model_file, tqdm(total=total_size, unit="B", unit_scale=True, initial=current_size) as progress_bar:
@@ -68,22 +79,25 @@ class NexusAI:
         except requests.RequestException as e:
             raise Exception(f"[NexusAI] Model download failed: {e}")
 
-    def _load_model(self, model_directory: str, model_filename: str) -> Llama:
+    def load_model(self, model_key: str):
         """Loads the AI model into memory for interaction."""
-        model_path = os.path.join(model_directory, model_filename)
-        if not os.path.exists(model_path):
-            raise FileNotFoundError(f"[NexusAI] Model '{model_filename}' is missing.")
+        self._ensure_model_exists(model_key)
+        model_path = os.path.join(self.model_directory, MODELS[model_key]["name"])
         print(f"[NexusAI] Loading the model from '{model_path}'...")
-        return Llama(
+        self.model = Llama(
             model_path=model_path,
             n_ctx=MAX_SEQUENCE_LENGTH,
             n_threads=NUM_THREADS,
             n_gpu_layers=GPU_LAYERS,
             verbose=False
         )
+        self.current_model = model_key
 
     def generate_response(self, prompt: str) -> str:
         """Generates a response to the given prompt using the loaded AI model."""
+        if not self.model:
+            return "[NexusAI] No model loaded. Please select a model first."
+
         self.num_requests += 1
         start_time = time.time()
 
@@ -91,7 +105,7 @@ class NexusAI:
             sys.stderr = io.StringIO()
             self.history.append(f"<|user|>\n{prompt}\n")
 
-            if len(self.history) > MAX_HISTORY_SIZE * 2:
+            if MAX_HISTORY_SIZE and len(self.history) > MAX_HISTORY_SIZE * 2:
                 self.history = self.history[-(MAX_HISTORY_SIZE * 2):]
 
             spinner_thread = threading.Thread(target=self._show_loading_animation)
@@ -131,8 +145,10 @@ class NexusAI:
         """Resets the conversation history and clears the screen."""
         os.system("cls" if os.name == "nt" else "clear")
         self.history = []
+        if CUSTOM_PROMPT:
+            self.history.append(f"<|assistant|>\n{CUSTOM_PROMPT}\n")
         print("\n[NexusAI] All conversation history has been reset. Feel free to start afresh.")
-        show_ascii()
+        show_ascii(self.current_model)
         return "[NexusAI] Conversation reset successfully."
 
     def show_help(self):
@@ -144,7 +160,8 @@ class NexusAI:
             "  - 'reset'    : Clears all conversation history and resets the AI's context.\n"
             "  - 'clear'    : Clears the screen for a cleaner workspace.\n"
             "  - 'cc'       : Copies the most recent code snippet from the AI's response to your clipboard.\n"
-            "  - 'ca'       : Copies the latest full response from the AI to your clipboard.\n\n"
+            "  - 'ca'       : Copies the latest full response from the AI to your clipboard.\n"
+            "  - 'model'    : Allows you to select or change the AI model.\n\n"
             "Tips:\n"
             "• Use clear and concise prompts to get the best responses.\n"
             "• Reset the conversation if the AI's context becomes too long or irrelevant.\n"
@@ -190,20 +207,42 @@ class NexusAI:
         self.spinner_running = False
         spinner_thread.join()
 
-
 # Show ASCII art
-def show_ascii():
+def show_ascii(model_name=None):
     ascii_art = art.text2art("NexusAI")
     lines = ascii_art.splitlines()
     ascii_with_name = "\n".join(lines[:-1]) + f"\n{' ' * (len(lines[-1]) - 20)}Developed by @0x3ef8"
     print(ascii_with_name)
+    if model_name:
+        print(f"\nCurrent Model: {MODELS[model_name]['name']}")
     print("\nType 'help' to show available commands or 'exit' to quit.\n")
+
+def select_model():
+    print("\nAvailable models:")
+    for i, (key, value) in enumerate(MODELS.items(), 1):
+        print(f"{i}. {value['name']}")
+    
+    while True:
+        try:
+            choice = int(input("\nEnter the number of the model you want to use: "))
+            if 1 <= choice <= len(MODELS):
+                return list(MODELS.keys())[choice - 1]
+            else:
+                print("Invalid choice. Please try again.")
+        except ValueError:
+            print("Please enter a valid number.")
 
 def main():
     try:
-        assistant = NexusAI(MODEL_DIRECTORY, MODEL_FILENAME)
+        assistant = NexusAI(MODEL_DIRECTORY)
         assistant.clear_screen()
         show_ascii()
+
+        print("Please select a model to start.")
+        model_key = select_model()
+        assistant.load_model(model_key)
+        assistant.clear_screen()
+        show_ascii(model_key)
 
         while True:
             user_input = input("You: ").strip()
@@ -222,10 +261,18 @@ def main():
 
             if user_input.lower() == "clear":
                 assistant.clear_screen()
+                show_ascii(assistant.current_model)
                 continue
 
             if user_input.lower() in ['cc', 'ca']:
                 assistant.process_command(user_input.lower())
+                continue
+
+            if user_input.lower() == "model":
+                model_key = select_model()
+                assistant.load_model(model_key)
+                assistant.clear_screen()
+                show_ascii(model_key)
                 continue
 
             if user_input:
@@ -237,7 +284,6 @@ def main():
     except Exception as e:
         print(f"[NexusAI] A critical error occurred: {e}")
 
-
-
 if __name__ == "__main__":
     main()
+
