@@ -10,7 +10,7 @@ import art
 import pyperclip
 import re
 
-# Configuration Constants
+# Model configurations
 MODELS = {
     "phi3": {
         "name": "Phi-3-mini-4k-instruct-q4.gguf",
@@ -21,20 +21,15 @@ MODELS = {
         "url": "https://huggingface.co/bartowski/DeepSeek-R1-Distill-Qwen-1.5B-GGUF/resolve/main/DeepSeek-R1-Distill-Qwen-1.5B-Q6_K.gguf"
     }
 }
-MODEL_DIRECTORY = "models"
-MAX_SEQUENCE_LENGTH = 4096
-NUM_THREADS = 8
-GPU_LAYERS = 35
-MAX_TOKENS = 2048
 
-
-# Custom prompt for AI initialization (can be disabled by setting to False)
-# CUSTOM_PROMPT = "From now on, your name is NexusAI, developed by 0x3ef8. Act as a highly professional assistant with expertise in advanced programming concepts, tools, and best practices. Provide detailed, efficient, and professional responses."
-CUSTOM_PROMPT = False
-# Limit for conversation history (can be disabled by setting to False)
-MAX_HISTORY_SIZE = False
-
-# Monitoring and analytics
+# Configuration Constants
+MODEL_DIRECTORY = "models"  # Directory where the models are stored
+MAX_SEQUENCE_LENGTH = 4096  # Maximum context length for the AI
+NUM_THREADS = 8  # Number of CPU threads allocated
+GPU_LAYERS = 35  # Number of layers offloaded to the GPU for processing
+MAX_TOKENS = 2048  # Maximum tokens for each AI response
+CUSTOM_PROMPT = False # Custom prompt for AI initialization (can be disabled by setting to False) Example usage: CUSTOM_PROMPT = "From now on, your name is NexusAI, developed by 0x3ef8. Act as a highly professional assistant with expertise in advanced programming concepts, tools, and best practices. Provide detailed, efficient, and professional responses."
+MAX_HISTORY_SIZE = False # Limit for conversation history (can be disabled by setting to False)
 ENABLE_MONITORING = True  # Enable detailed response time and request tracking
 
 class NexusAI:
